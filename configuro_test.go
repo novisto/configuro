@@ -1,4 +1,4 @@
-//nolint
+// nolint
 package configuro_test
 
 import (
@@ -62,7 +62,6 @@ func (k Key) Validate() error {
 }
 
 func TestEnvVarsEscaping(t *testing.T) {
-
 	envOnlyWithoutPrefix, err := configuro.NewConfig(
 		configuro.WithLoadFromEnvVars("CONFIG"),
 		configuro.WithoutLoadDotEnv(),
@@ -120,7 +119,6 @@ func TestEnvVarsEscaping(t *testing.T) {
 }
 
 func TestLoadFromEnvVarsOnly(t *testing.T) {
-
 	envOnlyWithDefaultPrefix, err := configuro.NewConfig(
 		configuro.WithoutLoadDotEnv(),
 		configuro.WithoutLoadFromConfigFile(),
@@ -144,13 +142,13 @@ func TestLoadFromEnvVarsOnly(t *testing.T) {
 	// Set osEnvVars
 	_ = os.Setenv("PREFIX_NESTED_KEY_A", "X")
 	_ = os.Setenv("PREFIX_NESTED_KEY_B", "Y")
-	_ = os.Setenv("CONFIG_NESTED_KEY_A", "A")
+	_ = os.Setenv("CONFIG_NESTED_KEY_A", "A=")
 	_ = os.Setenv("CONFIG_NESTED_KEY_B", "B")
 	_ = os.Setenv("CONFIG_NESTED_KEY_EMPTY", "")
 
 	tests := []test{
 		{name: "withoutPrefix", config: envOnlyWithDefaultPrefix, expected: Example{Nested{Key: Key{
-			A:     "A",
+			A:     "A=",
 			B:     "B",
 			EMPTY: "",
 		}}}},
@@ -177,7 +175,6 @@ func TestLoadFromEnvVarsOnly(t *testing.T) {
 }
 
 func TestLoadDotEnv(t *testing.T) {
-
 	// Clear Env that may be set up by previous tests. So that .env values are not overridden
 	os.Clearenv()
 
@@ -414,9 +411,8 @@ nested:
 	}
 }
 
-//TODO Too long, try make it better.
+// TODO Too long, try make it better.
 func TestOverloadConfigDirWithEnv(t *testing.T) {
-
 	os.Clearenv()
 
 	err := os.MkdirAll(os.TempDir()+"/conf/", 0777)
@@ -769,7 +765,8 @@ Object:
 			want: Obj{
 				Object: map[string]string{
 					"key": "bb",
-				}},
+				},
+			},
 			wantErr: true,
 		},
 		{
@@ -779,7 +776,8 @@ Object:
 				Object: map[string]string{
 					"dot.key": "aa",
 					"key":     "bb",
-				}},
+				},
+			},
 			wantErr: false,
 		},
 	}
@@ -891,7 +889,6 @@ nested:
 	errsType, ok := err.(configuro.ErrValidationErrors)
 	if !ok {
 		t.Fatal("Validation with Tags didn't return ErrValidationErrors when multi error happen.")
-
 	}
 
 	Errs := errsType.Errors()
