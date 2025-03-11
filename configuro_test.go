@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sherifabdlnaby/configuro"
+	"github.com/novisto/configuro"
 	"go.uber.org/multierr"
 )
 
