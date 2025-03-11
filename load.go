@@ -59,7 +59,7 @@ func (c *Config) loadInternal(key string, configStruct interface{}) error {
 }
 
 func (c *Config) bindAllEnvsWithPrefix() {
-	envKVRegex := regexp.MustCompile("^" + c.envPrefix + "_" + "(.*)=.*$")
+	envKVRegex := regexp.MustCompile("^" + c.envPrefix + "_" + "(.*?)=.*$")
 	Envvars := os.Environ()
 	for _, env := range Envvars {
 		match := envKVRegex.FindSubmatch([]byte(env))
@@ -67,9 +67,8 @@ func (c *Config) bindAllEnvsWithPrefix() {
 			matchUnescaper := strings.NewReplacer("__", "_", "_", ".")
 			matchUnescaped := matchUnescaper.Replace(string(match[1]))
 			err := c.viper.BindEnv(matchUnescaped)
-
 			if err != nil {
-				//Should never happen tho.
+				// Should never happen tho.
 				panic(err)
 			}
 		}
@@ -87,7 +86,8 @@ func stringJSONArrayToSlice() func(f reflect.Kind, t reflect.Kind, data interfac
 	return func(
 		f reflect.Kind,
 		t reflect.Kind,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if f != reflect.String || t != reflect.Slice {
 			return data, nil
 		}
@@ -121,7 +121,8 @@ func stringJSONObjToMap() func(f reflect.Kind, t reflect.Kind, data interface{})
 	return func(
 		f reflect.Kind,
 		t reflect.Kind,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if f != reflect.String || t != reflect.Map {
 			return data, nil
 		}
@@ -147,7 +148,8 @@ func stringJSONObjToStruct() func(f reflect.Kind, t reflect.Kind, data interface
 	return func(
 		f reflect.Kind,
 		t reflect.Kind,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if f != reflect.String || t != reflect.Struct {
 			return data, nil
 		}
@@ -168,12 +170,13 @@ func stringJSONObjToStruct() func(f reflect.Kind, t reflect.Kind, data interface
 }
 
 func expandEnvVariablesWithDefaults() func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
-	var configWithEnvExpand = regexp.MustCompile(`(\${([\w@.]+)(\|([\w@.:,]+)?)?})`)
-	var exactMatchEnvExpand = regexp.MustCompile(`^` + configWithEnvExpand.String() + `$`)
+	configWithEnvExpand := regexp.MustCompile(`(\${([\w@.]+)(\|([\w@.:,]+)?)?})`)
+	exactMatchEnvExpand := regexp.MustCompile(`^` + configWithEnvExpand.String() + `$`)
 	return func(
 		f reflect.Kind,
 		t reflect.Kind,
-		data interface{}) (interface{}, error) {
+		data interface{},
+	) (interface{}, error) {
 		if f != reflect.String {
 			return data, nil
 		}

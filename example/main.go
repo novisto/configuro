@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/sherifabdlnaby/configuro"
+	"github.com/novisto/configuro"
 )
 
 //Config Is our main Application Config Struct.
