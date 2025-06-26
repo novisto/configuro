@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
 
@@ -82,13 +82,13 @@ func setTagName(hook string) viper.DecoderConfigOption {
 }
 
 // StringJSONArrayOrSlicesToConfig will convert Json Encoded Strings to Maps or Slices, Used Primarily to support Slices and Maps in Environment variables
-func stringJSONArrayToSlice() func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+func stringJSONArrayToSlice() func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 	return func(
-		f reflect.Kind,
-		t reflect.Kind,
+		f reflect.Type,
+		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f != reflect.String || t != reflect.Slice {
+		if f.Kind() != reflect.String || t.Kind() != reflect.Slice {
 			return data, nil
 		}
 
@@ -98,16 +98,21 @@ func stringJSONArrayToSlice() func(f reflect.Kind, t reflect.Kind, data interfac
 		}
 
 		var ret interface{}
-		if t == reflect.Slice {
+		if t.Kind() == reflect.Slice {
 			jsonArray := make([]interface{}, 0)
 			err := json.Unmarshal([]byte(raw), &jsonArray)
 			if err != nil {
 				// Try comma separated format too
-				val, err := mapstructure.StringToSliceHookFunc(",").(func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error))(f, t, data)
-				if err != nil {
-					return val, err
+				if f.Kind() != reflect.String || t.Kind() != reflect.Slice {
+					return data, nil
 				}
-				ret = val
+
+				raw := data.(string)
+				if raw == "" {
+					return []string{}, nil
+				}
+
+				ret = strings.Split(raw, ",")
 			} else {
 				ret = jsonArray
 			}
@@ -117,13 +122,13 @@ func stringJSONArrayToSlice() func(f reflect.Kind, t reflect.Kind, data interfac
 	}
 }
 
-func stringJSONObjToMap() func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+func stringJSONObjToMap() func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 	return func(
-		f reflect.Kind,
-		t reflect.Kind,
+		f reflect.Type,
+		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f != reflect.String || t != reflect.Map {
+		if f.Kind() != reflect.String || t.Kind() != reflect.Map {
 			return data, nil
 		}
 
@@ -144,13 +149,13 @@ func stringJSONObjToMap() func(f reflect.Kind, t reflect.Kind, data interface{})
 	}
 }
 
-func stringJSONObjToStruct() func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+func stringJSONObjToStruct() func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 	return func(
-		f reflect.Kind,
-		t reflect.Kind,
+		f reflect.Type,
+		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f != reflect.String || t != reflect.Struct {
+		if f.Kind() != reflect.String || t.Kind() != reflect.Struct {
 			return data, nil
 		}
 
@@ -169,15 +174,15 @@ func stringJSONObjToStruct() func(f reflect.Kind, t reflect.Kind, data interface
 	}
 }
 
-func expandEnvVariablesWithDefaults() func(f reflect.Kind, t reflect.Kind, data interface{}) (interface{}, error) {
+func expandEnvVariablesWithDefaults() func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
 	configWithEnvExpand := regexp.MustCompile(`(\${([\w@.]+)(\|([\w@.:,]+)?)?})`)
 	exactMatchEnvExpand := regexp.MustCompile(`^` + configWithEnvExpand.String() + `$`)
 	return func(
-		f reflect.Kind,
-		t reflect.Kind,
+		f reflect.Type,
+		t reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f != reflect.String {
+		if f.Kind() != reflect.String {
 			return data, nil
 		}
 
